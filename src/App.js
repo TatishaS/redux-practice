@@ -18,14 +18,10 @@ function App() {
 
     if (action.type === 'REMOVE_TASK') {
       console.log(action.payload);
-
-      const result = window.confirm('Do you really want to delete this task?');
-      if (result) {
-        const newState = state.filter(obj => {
-          return obj.id !== action.payload;
-        });
-        return newState;
-      }
+      const newState = state.filter(obj => {
+        return obj.id !== action.payload;
+      });
+      return newState;
     }
     return state;
   };
@@ -42,10 +38,13 @@ function App() {
   };
 
   const onRemoveItem = id => {
-    dispatch({
-      type: 'REMOVE_TASK',
-      payload: id,
-    });
+    const result = window.confirm('Do you really want to delete this task?');
+    if (result) {
+      dispatch({
+        type: 'REMOVE_TASK',
+        payload: id,
+      });
+    }
   };
 
   return (
