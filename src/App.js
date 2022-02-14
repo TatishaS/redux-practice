@@ -3,40 +3,54 @@ import { Paper, Divider, Button, List, Tabs, Tab } from '@mui/material';
 import { AddField } from './components/AddField';
 import { Item } from './components/Item';
 
+const reducer = (state, action) => {
+  if (action.type === 'ADD_TASK') {
+    return [
+      ...state,
+      {
+        id: state.length + 1,
+        text: action.payload.text,
+        completed: action.payload.checked,
+      },
+    ];
+  }
+
+  if (action.type === 'REMOVE_TASK') {
+    console.log(action.payload);
+    const newState = state.filter(obj => {
+      return obj.id !== action.payload;
+    });
+    return newState;
+  }
+
+  if (action.type === 'TOGGLE_CHECKBOX') {
+    return state.map(obj => {
+      if (obj.id === action.payload) {
+        return {
+          ...obj,
+          completed: !obj.completed,
+        };
+      }
+      return obj;
+    });
+  }
+
+  if (action.type === 'CLEAR_ALL_TASKS') {
+    return [];
+  }
+
+  if (action.type === 'MARK_ALL_COMPLETED') {
+    return state.map(obj => {
+      return {
+        ...obj,
+        completed: true,
+      };
+    });
+  }
+  return state;
+};
+
 function App() {
-  const reducer = (state, action) => {
-    if (action.type === 'ADD_TASK') {
-      return [
-        ...state,
-        {
-          id: state.length + 1,
-          text: action.payload.text,
-          completed: action.payload.checked,
-        },
-      ];
-    }
-
-    if (action.type === 'REMOVE_TASK') {
-      console.log(action.payload);
-      const newState = state.filter(obj => {
-        return obj.id !== action.payload;
-      });
-      return newState;
-    }
-
-    if (action.type === 'TOGGLE_CHECKBOX') {
-      return state.map(obj => {
-        if (obj.id === action.payload) {
-          return {
-            ...obj,
-            completed: !obj.completed,
-          };
-        }
-        return obj;
-      });
-    }
-    return state;
-  };
   const [state, dispatch] = React.useReducer(reducer, []);
 
   const addTask = (text, checked) => {
@@ -63,6 +77,22 @@ function App() {
     dispatch({
       type: 'TOGGLE_CHECKBOX',
       payload: id,
+    });
+  };
+
+  const clearAllTasks = () => {
+    const result = window.confirm('Do you really want to delete all tasks?');
+
+    if (result) {
+      dispatch({
+        type: 'CLEAR_ALL_TASKS',
+      });
+    }
+  };
+
+  const markAllCompleted = () => {
+    dispatch({
+      type: 'MARK_ALL_COMPLETED',
     });
   };
 
@@ -94,8 +124,8 @@ function App() {
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button>Отметить всё</Button>
-          <Button>Очистить</Button>
+          <Button onClick={markAllCompleted}>Отметить всё</Button>
+          <Button onClick={clearAllTasks}>Очистить</Button>
         </div>
       </Paper>
     </div>
