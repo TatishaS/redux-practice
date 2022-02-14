@@ -23,6 +23,18 @@ function App() {
       });
       return newState;
     }
+
+    if (action.type === 'TOGGLE_CHECKBOX') {
+      return state.map(obj => {
+        if (obj.id === action.payload) {
+          return {
+            ...obj,
+            completed: !obj.completed,
+          };
+        }
+        return obj;
+      });
+    }
     return state;
   };
   const [state, dispatch] = React.useReducer(reducer, []);
@@ -47,6 +59,13 @@ function App() {
     }
   };
 
+  const toggleCheckbox = id => {
+    dispatch({
+      type: 'TOGGLE_CHECKBOX',
+      payload: id,
+    });
+  };
+
   return (
     <div className="App">
       <Paper className="wrapper">
@@ -68,6 +87,7 @@ function App() {
               text={obj.text}
               completed={obj.completed}
               onRemove={onRemoveItem}
+              onChangeCheckbox={toggleCheckbox}
               id={obj.id}
             />
           ))}
