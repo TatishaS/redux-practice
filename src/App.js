@@ -1,138 +1,55 @@
 import React from 'react';
-import { Paper, Divider, Button, List, Tabs, Tab } from '@mui/material';
+import { Paper, Divider, Button, List } from '@mui/material';
 import { AddField } from './components/AddField';
 import { Item } from './components/Item';
-
-const reducer = (state, action) => {
-  if (action.type === 'ADD_TASK') {
-    return {
-      ...state,
-      tasks: [
-        ...state.tasks,
-        {
-          id: state.tasks.length + 1,
-          text: action.payload.text,
-          completed: action.payload.checked,
-        },
-      ],
-    };
-  }
-
-  if (action.type === 'REMOVE_TASK') {
-    console.log(action.payload);
-    const newState = state.tasks.filter(obj => {
-      return obj.id !== action.payload;
-    });
-    return {
-      ...state,
-      tasks: newState,
-    };
-  }
-
-  if (action.type === 'TOGGLE_CHECKBOX') {
-    return {
-      ...state,
-      tasks: state.tasks.map(obj => {
-        if (obj.id === action.payload) {
-          return {
-            ...obj,
-            completed: !obj.completed,
-          };
-        }
-        return obj;
-      }),
-    };
-  }
-
-  if (action.type === 'CLEAR_ALL_TASKS') {
-    return {
-      ...state,
-      tasks: [],
-    };
-  }
-
-  if (action.type === 'MARK_ALL_COMPLETED') {
-    return {
-      ...state,
-      tasks: state.tasks.map(obj => ({
-        ...obj,
-        completed: true,
-      })),
-    };
-  }
-  if (action.type === 'SET_FILTER') {
-    return {
-      ...state,
-      filterBy: action.payload,
-    };
-  }
-  return state;
-};
-
-const filterIndex = {
-  all: 0,
-  active: 1,
-  completed: 2,
-};
+import Filter from './components/Filter';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  addTask,
+  removeTask,
+  toggleCheckbox,
+  completeAll,
+  clearAll,
+  fetchTasks,
+} from './redux/actions/tasks';
 
 function App() {
-  const [state, dispatch] = React.useReducer(reducer, {
-    // Change state from Array to Object with key 'tasks'
-    tasks: [],
-    filterBy: 'completed',
-  });
-  const [allCompleted, setAllCompleted] = React.useState(false);
+  const dispatch = useDispatch();
+  const state = useSelector(state => state);
 
-  const addTask = (text, checked) => {
-    dispatch({
-      type: 'ADD_TASK',
-      payload: {
-        text,
-        checked,
-      },
-    });
+  React.useEffect(() => {
+    dispatch(fetchTasks());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* const [allCompleted, setAllCompleted] = React.useState(false); */
+
+  const handleClickAdd = (text, checked) => {
+    dispatch(addTask(text, checked));
   };
 
-  const onRemoveItem = id => {
+  const handleClickRemove = id => {
     const result = window.confirm('Do you really want to delete this task?');
     if (result) {
-      dispatch({
-        type: 'REMOVE_TASK',
-        payload: id,
-      });
+      dispatch(removeTask(id));
     }
   };
 
-  const toggleCheckbox = id => {
-    dispatch({
-      type: 'TOGGLE_CHECKBOX',
-      payload: id,
-    });
+  const handleClickCheckbox = id => {
+    dispatch(toggleCheckbox(id));
   };
 
-  const clearAllTasks = () => {
+  const handleClearAll = () => {
     const result = window.confirm('Do you really want to delete all tasks?');
 
     if (result) {
-      dispatch({
-        type: 'CLEAR_ALL_TASKS',
-      });
+      dispatch(clearAll());
     }
   };
 
-  const markAllCompleted = () => {
-    setAllCompleted(!allCompleted);
-    dispatch({
-      type: 'MARK_ALL_COMPLETED',
-    });
-  };
-
-  const setFilter = (_, newIndex) => {
-    const status = Object.keys(filterIndex)[newIndex];
-    dispatch({
-      type: 'SET_FILTER',
-      payload: status,
-    });
+  const handleClickCompleteAll = () => {
+    //setAllCompleted(!allCompleted);
+    dispatch(completeAll());
   };
 
   return (
@@ -141,24 +58,21 @@ function App() {
         <Paper className="header" elevation={0}>
           <h4>Список задач</h4>
         </Paper>
-        <AddField onAdd={addTask} />
+        <AddField onAdd={handleClickAdd} />
         <Divider />
-        <Tabs onChange={setFilter} value={filterIndex[state.filterBy]}>
-          <Tab label="Все" />
-          <Tab label="Активные" />
-          <Tab label="Завершённые" />
-        </Tabs>
+        <Filter />
         <Divider />
         <List>
           {state.tasks
+            // eslint-disable-next-line array-callback-return
             .filter(task => {
-              if (state.filterBy === 'all') {
+              if (state.filter.filterBy === 'all') {
                 return true;
               }
-              if (state.filterBy === 'completed') {
+              if (state.filter.filterBy === 'completed') {
                 return task.completed;
               }
-              if (state.filterBy === 'active') {
+              if (state.filter.filterBy === 'active') {
                 return !task.completed;
               }
             })
@@ -167,18 +81,21 @@ function App() {
                 key={obj.id}
                 text={obj.text}
                 completed={obj.completed}
-                onRemove={onRemoveItem}
-                onChangeCheckbox={toggleCheckbox}
+                onRemove={handleClickRemove}
+                onChangeCheckbox={handleClickCheckbox}
                 id={obj.id}
               />
             ))}
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button onClick={markAllCompleted} disabled={state.length === 0}>
-            {allCompleted ? 'Снять отметки' : 'Отметить всё'}
+          <Button
+            onClick={handleClickCompleteAll}
+            disabled={state.tasks.length === 0}
+          >
+            Выделить все
           </Button>
-          <Button disabled={state.length === 0} onClick={clearAllTasks}>
+          <Button disabled={state.tasks.length === 0} onClick={handleClearAll}>
             Очистить
           </Button>
         </div>
